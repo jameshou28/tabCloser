@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Tab Closer",
+  "version": "1.0",
+  "description": "Automatically closes tabs that match URLs on your blocklist",
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Tab Closer"
+  }
+}
