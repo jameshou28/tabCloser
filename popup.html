@@ -12,9 +12,29 @@
     
     h1 {
       font-size: 18px;
-      margin-top: 0;
-      margin-bottom: 20px;
+      margin: 0;
       color: #333;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .header-lock-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+    
+    .header-lock-btn:hover {
+      background-color: #f0f0f0;
     }
     
     .input-group {
@@ -100,10 +120,14 @@
       margin-top: 15px;
       line-height: 1.4;
     }
+    
   </style>
 </head>
 <body>
-  <h1>Tab Closer</h1>
+  <div class="header">
+    <h1>Tab Closer</h1>
+    <button id="lockBtn" class="header-lock-btn">🔓</button>
+  </div>
   
   <div class="input-group">
     <input type="text" id="urlInput" placeholder="Enter URL to block (e.g., example.com)">
