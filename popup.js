@@ -3,20 +3,21 @@ document.addEventListener('DOMContentLoaded', function() {
   const addBtn = document.getElementById('addBtn');
   const urlList = document.getElementById('urlList');
   const lockBtn = document.getElementById('lockBtn');
+  const changeKeyBtn = document.getElementById('changeKeyBtn');
   
   let isLocked = false;
   let CORRECT_KEY = '';
   
-  // load the key from key.json
-  fetch('key.json')
-    .then(response => response.json())
-    .then(data => {
-      CORRECT_KEY = data.KEY;
-    })
-    .catch(error => {
-      console.error('Error loading key. Using default.', error);
+  // initialize key from chrome storage
+  chrome.storage.local.get(['extensionKey'], function(result) {
+    if (result.extensionKey) {
+      CORRECT_KEY = result.extensionKey;
+    } else {
+      // set default key if none exists
       CORRECT_KEY = 'e4v56r8b7tnyoupmn7bg6ufv5rydcetf';
-    });
+      chrome.storage.local.set({ 'extensionKey': CORRECT_KEY });
+    }
+  });
   
   // load and display blocked urls and lock state
   loadBlockedUrls();
@@ -32,6 +33,9 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // lock!
   lockBtn.addEventListener('click', handleLockClick);
+  
+  // change key
+  changeKeyBtn.addEventListener('click', handleChangeKey);
   
   function addUrl() {
     const url = urlInput.value.trim();
@@ -117,13 +121,13 @@ document.addEventListener('DOMContentLoaded', function() {
   function handleLockClick() {
     if (isLocked) {
       // unlock attempt
-      const enteredKey = prompt('Enter KEY to unlock:');
+      const enteredKey = prompt('Enter key to unlock:');
       if (enteredKey === CORRECT_KEY) {
         isLocked = false;
         updateLockUI();
         saveLockState();
       } else if (enteredKey !== null) {
-        alert('Incorrect KEY!');
+        alert('Incorrect key!');
       }
     } else {
       // lock
@@ -136,7 +140,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function updateLockUI() {
     if (isLocked) {
       lockBtn.textContent = '🔒';
-      lockBtn.title = 'Locked - Click to unlock with KEY';
+      lockBtn.title = 'Locked - Click to unlock with key';
     } else {
       lockBtn.textContent = '🔓';
       lockBtn.title = 'Unlocked - Click to lock';
@@ -151,6 +155,37 @@ document.addEventListener('DOMContentLoaded', function() {
     chrome.storage.sync.get(['isLocked'], function(result) {
       isLocked = result.isLocked || false;
       updateLockUI();
+    });
+  }
+  
+  function handleChangeKey() {
+    // prompt for current key
+    const currentKey = prompt('Enter current key:');
+    if (currentKey === null) return; 
+    if (currentKey !== CORRECT_KEY) {
+      alert('Incorrect current key!');
+      return;
+    }
+    
+    // prompt for new key
+    const newKey = prompt('Enter new key:');
+    if (newKey === null) return; 
+    if (newKey.trim() === '') {
+      alert('Key cannot be empty!');
+      return;
+    }
+    
+    // update key
+    updateKey(newKey.trim());
+  }
+  
+  function updateKey(newKey) {
+    // update var function
+    CORRECT_KEY = newKey;
+    
+    // store new key in chrome storage
+    chrome.storage.local.set({ 'extensionKey': newKey }, function() {
+      alert('Key updated successfully!');
     });
   }
 });

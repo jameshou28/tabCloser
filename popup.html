@@ -23,6 +23,12 @@
       margin-bottom: 20px;
     }
     
+    .header-right {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+    
     .header-lock-btn {
       background: none;
       border: none;
@@ -35,6 +41,21 @@
     
     .header-lock-btn:hover {
       background-color: #f0f0f0;
+    }
+    
+    .change-key-btn {
+      background-color: #8a8f93;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .change-key-btn:hover {
+      background-color: #5d6165;
     }
     
     .input-group {
@@ -126,7 +147,10 @@
 <body>
   <div class="header">
     <h1>Tab Closer</h1>
-    <button id="lockBtn" class="header-lock-btn">🔓</button>
+    <div class="header-right">
+      <button id="changeKeyBtn" class="change-key-btn">Change Key</button>
+      <button id="lockBtn" class="header-lock-btn">🔓</button>
+    </div>
   </div>
   
   <div class="input-group">
