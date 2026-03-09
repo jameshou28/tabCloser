@@ -31,6 +31,7 @@ A Chrome extension that automatically closes tabs that match URLs on your blockl
 ### Default KEY
 
 The default KEY is: `e4v56r8b7tnyoupmn7bg6ufv5rydcetf`
+<sub><sup>The key can also be found by inspecting the extension in Chrome, going to Application --> Extension Storage --> Local</sup></sub>
 
 ## File Structure
 
