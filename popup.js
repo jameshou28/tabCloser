@@ -5,7 +5,18 @@ document.addEventListener('DOMContentLoaded', function() {
   const lockBtn = document.getElementById('lockBtn');
   
   let isLocked = false;
-  const CORRECT_KEY = 'e4v56r8b7tnyoupmn7bg6ufv5rydcetf';
+  let CORRECT_KEY = '';
+  
+  // load the key from key.json
+  fetch('key.json')
+    .then(response => response.json())
+    .then(data => {
+      CORRECT_KEY = data.KEY;
+    })
+    .catch(error => {
+      console.error('Error loading key. Using default.', error);
+      CORRECT_KEY = 'e4v56r8b7tnyoupmn7bg6ufv5rydcetf';
+    });
   
   // load and display blocked urls and lock state
   loadBlockedUrls();
