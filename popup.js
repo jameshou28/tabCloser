@@ -7,11 +7,11 @@ document.addEventListener('DOMContentLoaded', function() {
   let isLocked = false;
   const CORRECT_KEY = 'e4v56r8b7tnyoupmn7bg6ufv5rydcetf';
   
-  // Load and display blocked URLs and lock state
+  // load and display blocked urls and lock state
   loadBlockedUrls();
   loadLockState();
   
-  // Add URL to blocklist
+  // add url to blocklist
   addBtn.addEventListener('click', addUrl);
   urlInput.addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
   
-  // Lock functionality
+  // lock!
   lockBtn.addEventListener('click', handleLockClick);
   
   function addUrl() {
@@ -33,13 +33,13 @@ document.addEventListener('DOMContentLoaded', function() {
     chrome.storage.sync.get(['blockedUrls'], function(result) {
       const blockedUrls = result.blockedUrls || [];
       
-      // Check if URL already exists
+      // check if url already exists
       if (blockedUrls.includes(url)) {
         alert('This URL is already blocked');
         return;
       }
       
-      // Add URL to blocklist
+      // add url to blocklist
       blockedUrls.push(url);
       
       chrome.storage.sync.set({ blockedUrls: blockedUrls }, function() {
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
         urlList.appendChild(urlItem);
       });
       
-      // Add event listeners to remove buttons
+      // add event listeners to remove buttons
       document.querySelectorAll('.remove-btn').forEach(btn => {
         btn.addEventListener('click', function() {
           removeUrl(this.getAttribute('data-url'));
@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   function handleLockClick() {
     if (isLocked) {
-      // Try to unlock - prompt for key
+      // unlock attempt
       const enteredKey = prompt('Enter KEY to unlock:');
       if (enteredKey === CORRECT_KEY) {
         isLocked = false;
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
         alert('Incorrect KEY!');
       }
     } else {
-      // Lock without requiring key
+      // lock
       isLocked = true;
       updateLockUI();
       saveLockState();
