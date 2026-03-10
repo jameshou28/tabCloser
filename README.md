@@ -1,4 +1,4 @@
-# Tab Closer
+# Tab Lock
 
 A Chrome extension that automatically closes tabs that match URLs on your blocklist. Perfect for improving productivity by blocking distracting websites.
 
@@ -18,7 +18,7 @@ A Chrome extension that automatically closes tabs that match URLs on your blockl
 2. Open Chrome and navigate to `chrome://extensions/`
 3. Enable "Developer mode" in the top right
 4. Click "Load unpacked" and select the extension directory
-5. The Tab Closer icon will appear in your browser toolbar
+5. The Tab Lock icon will appear in your browser toolbar
 
 ## Usage
 
@@ -37,7 +37,7 @@ The default KEY is: `e4v56r8b7tnyoupmn7bg6ufv5rydcetf`
 ## File Structure
 
 ```
-tabCloser/
+tabLock/
 ├── manifest.json       # Extension configuration
 ├── popup.html          # Extension popup interface
 ├── popup.js            # Popup logic and UI interactions
