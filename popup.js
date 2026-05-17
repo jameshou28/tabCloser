@@ -1,191 +1,265 @@
-document.addEventListener('DOMContentLoaded', function() {
-  const urlInput = document.getElementById('urlInput');
-  const addBtn = document.getElementById('addBtn');
-  const urlList = document.getElementById('urlList');
-  const lockBtn = document.getElementById('lockBtn');
-  const changeKeyBtn = document.getElementById('changeKeyBtn');
-  
-  let isLocked = false;
-  let CORRECT_KEY = '';
-  
-  // initialize key from chrome storage
-  chrome.storage.local.get(['extensionKey'], function(result) {
-    if (result.extensionKey) {
-      CORRECT_KEY = result.extensionKey;
-    } else {
-      // set default key if none exists
-      CORRECT_KEY = 'e4v56r8b7tnyoupmn7bg6ufv5rydcetf';
-      chrome.storage.local.set({ 'extensionKey': CORRECT_KEY });
-    }
-  });
-  
-  // load and display blocked urls and lock state
+document.addEventListener('DOMContentLoaded', function () {
+
+  // ─── HARDCODED PASSWORD ───────────────────────────────────
+  // Change this value in the code to set your unlock password.
+  const CORRECT_KEY = 'your-password-here';
+
+  // ─── STATE ───────────────────────────────────────────────
+  let currentMode = 'password'; // 'password' | 'time'
+  let countdownInterval = null;
+
+  // ─── DOM REFS ─────────────────────────────────────────────
+  const urlInput        = document.getElementById('urlInput');
+  const addBtn          = document.getElementById('addBtn');
+  const urlList         = document.getElementById('urlList');
+  const statusPill      = document.getElementById('statusPill');
+  const lockSection     = document.getElementById('lockSection');
+  const activeLockPanel = document.getElementById('activeLockPanel');
+
+  const cardPassword    = document.getElementById('cardPassword');
+  const cardTime        = document.getElementById('cardTime');
+  const passwordConfig  = document.getElementById('passwordConfig');
+  const timeConfig      = document.getElementById('timeConfig');
+  const engageLockBtn   = document.getElementById('engageLockBtn');
+
+  const passwordActivePanel = document.getElementById('passwordActivePanel');
+  const timeActivePanel     = document.getElementById('timeActivePanel');
+  const unlockKeyInput      = document.getElementById('unlockKeyInput');
+  const unlockKeyBtn        = document.getElementById('unlockKeyBtn');
+  const countdownDisplay    = document.getElementById('countdownDisplay');
+
+  const lockHours   = document.getElementById('lockHours');
+  const lockMinutes = document.getElementById('lockMinutes');
+  const lockSeconds = document.getElementById('lockSeconds');
+
+  // ─── INIT ─────────────────────────────────────────────────
   loadBlockedUrls();
-  loadLockState();
-  
-  // add url to blocklist
+  restoreLockState();
+
+  // ─── MODE CARD CLICKS ─────────────────────────────────────
+  cardPassword.addEventListener('click', function () { selectMode('password'); });
+  cardTime.addEventListener('click',     function () { selectMode('time'); });
+
+  function selectMode(mode) {
+    currentMode = mode;
+
+    cardPassword.classList.toggle('selected',       mode === 'password');
+    cardPassword.classList.toggle('password-mode',  mode === 'password');
+    cardTime.classList.toggle('selected',            mode === 'time');
+    cardTime.classList.toggle('time-mode',           mode === 'time');
+
+    passwordConfig.style.display = mode === 'password' ? 'block' : 'none';
+    timeConfig.style.display     = mode === 'time'     ? 'block' : 'none';
+  }
+
+  // ─── URL MANAGEMENT ───────────────────────────────────────
   addBtn.addEventListener('click', addUrl);
-  urlInput.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-      addUrl();
-    }
+  urlInput.addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') addUrl();
   });
-  
-  // lock!
-  lockBtn.addEventListener('click', handleLockClick);
-  
-  // change key
-  changeKeyBtn.addEventListener('click', handleChangeKey);
-  
+
   function addUrl() {
     const url = urlInput.value.trim();
-    
-    if (!url) {
-      alert('Please enter a URL');
-      return;
-    }
-    
-    chrome.storage.sync.get(['blockedUrls'], function(result) {
+    if (!url) { notify('Enter a URL first', 'error'); return; }
+
+    chrome.storage.sync.get(['blockedUrls'], function (result) {
       const blockedUrls = result.blockedUrls || [];
-      
-      // check if url already exists
-      if (blockedUrls.includes(url)) {
-        alert('This URL is already blocked');
-        return;
-      }
-      
-      // add url to blocklist
+      if (blockedUrls.includes(url)) { notify('Already blocked', 'error'); return; }
       blockedUrls.push(url);
-      
-      chrome.storage.sync.set({ blockedUrls: blockedUrls }, function() {
+      chrome.storage.sync.set({ blockedUrls }, function () {
         urlInput.value = '';
         loadBlockedUrls();
+        notify('URL added', 'success');
       });
     });
   }
-  
+
   function removeUrl(url) {
-    if (isLocked) {
-      alert('Cannot remove URLs while locked. Unlock to remove URLs.');
-      return;
-    }
-    
-    chrome.storage.sync.get(['blockedUrls'], function(result) {
-      const blockedUrls = result.blockedUrls || [];
-      const updatedUrls = blockedUrls.filter(u => u !== url);
-      
-      chrome.storage.sync.set({ blockedUrls: updatedUrls }, function() {
-        loadBlockedUrls();
-      });
+    chrome.storage.sync.get(['blockedUrls'], function (result) {
+      const updated = (result.blockedUrls || []).filter(u => u !== url);
+      chrome.storage.sync.set({ blockedUrls: updated }, loadBlockedUrls);
     });
   }
-  
+
   function loadBlockedUrls() {
-    chrome.storage.sync.get(['blockedUrls'], function(result) {
+    chrome.storage.sync.get(['blockedUrls', 'lockState'], function (result) {
       const blockedUrls = result.blockedUrls || [];
-      
+      const lockState   = result.lockState   || { type: 'none' };
+      const locked      = lockState.type !== 'none';
+
       if (blockedUrls.length === 0) {
         urlList.innerHTML = '<div class="empty-state">No blocked URLs yet</div>';
         return;
       }
-      
+
       urlList.innerHTML = '';
-      
       blockedUrls.forEach(url => {
-        const urlItem = document.createElement('div');
-        urlItem.className = 'url-item';
-        
-        urlItem.innerHTML = `
-          <span class="url-text">${escapeHtml(url)}</span>
-          <button class="remove-btn" data-url="${escapeHtml(url)}">Remove</button>
-        `;
-        
-        urlList.appendChild(urlItem);
+        const item = document.createElement('div');
+        item.className = 'url-item';
+
+        const text = document.createElement('span');
+        text.className = 'url-text';
+        text.textContent = url;
+
+        const btn = document.createElement('button');
+        btn.className = 'remove-btn';
+        btn.textContent = 'remove';
+        btn.disabled = locked;
+        if (locked) btn.title = 'Unlock to remove';
+        btn.addEventListener('click', function () { removeUrl(url); });
+
+        item.appendChild(text);
+        item.appendChild(btn);
+        urlList.appendChild(item);
       });
-      
-      // add event listeners to remove buttons
-      document.querySelectorAll('.remove-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-          removeUrl(this.getAttribute('data-url'));
+    });
+  }
+
+  // ─── ENGAGE LOCK ──────────────────────────────────────────
+  engageLockBtn.addEventListener('click', function () {
+    if (currentMode === 'password') {
+      engagePasswordLock();
+    } else {
+      engageTimeLock();
+    }
+  });
+
+  function engagePasswordLock() {
+    const lockState = { type: 'password' };
+    chrome.storage.sync.set({ lockState }, function () {
+      applyLockUI(lockState);
+      notify('Password lock engaged', 'success');
+    });
+  }
+
+  function engageTimeLock() {
+    const h = parseInt(lockHours.value)   || 0;
+    const m = parseInt(lockMinutes.value) || 0;
+    const s = parseInt(lockSeconds.value) || 0;
+    const totalSeconds = h * 3600 + m * 60 + s;
+
+    if (totalSeconds <= 0) {
+      notify('Set a duration greater than 0', 'error');
+      return;
+    }
+
+    const unlockAt  = Date.now() + totalSeconds * 1000;
+    const lockState = { type: 'time', unlockAt };
+
+    chrome.storage.sync.set({ lockState }, function () {
+      applyLockUI(lockState);
+      notify('Time lock engaged', 'success');
+    });
+  }
+
+  // ─── UNLOCK ───────────────────────────────────────────────
+  unlockKeyBtn.addEventListener('click', attemptPasswordUnlock);
+  unlockKeyInput.addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') attemptPasswordUnlock();
+  });
+
+  function attemptPasswordUnlock() {
+    if (unlockKeyInput.value === CORRECT_KEY) {
+      const lockState = { type: 'none' };
+      chrome.storage.sync.set({ lockState }, function () {
+        unlockKeyInput.value = '';
+        applyLockUI(lockState);
+        notify('Unlocked', 'success');
+      });
+    } else {
+      unlockKeyInput.value = '';
+      notify('Incorrect key', 'error');
+    }
+  }
+
+  // ─── RESTORE STATE ON OPEN ────────────────────────────────
+  function restoreLockState() {
+    chrome.storage.sync.get(['lockState'], function (result) {
+      const lockState = result.lockState || { type: 'none' };
+
+      if (lockState.type === 'time' && Date.now() >= lockState.unlockAt) {
+        const cleared = { type: 'none' };
+        chrome.storage.sync.set({ lockState: cleared }, function () {
+          applyLockUI(cleared);
         });
-      });
-    });
-  }
-  
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
-  
-  function handleLockClick() {
-    if (isLocked) {
-      // unlock attempt
-      const enteredKey = prompt('Enter key to unlock:');
-      if (enteredKey === CORRECT_KEY) {
-        isLocked = false;
-        updateLockUI();
-        saveLockState();
-      } else if (enteredKey !== null) {
-        alert('Incorrect key!');
+        return;
       }
-    } else {
-      // lock
-      isLocked = true;
-      updateLockUI();
-      saveLockState();
-    }
-  }
-  
-  function updateLockUI() {
-    if (isLocked) {
-      lockBtn.textContent = '🔒';
-      lockBtn.title = 'Locked - Click to unlock with key';
-    } else {
-      lockBtn.textContent = '🔓';
-      lockBtn.title = 'Unlocked - Click to lock';
-    }
-  }
-  
-  function saveLockState() {
-    chrome.storage.sync.set({ isLocked: isLocked });
-  }
-  
-  function loadLockState() {
-    chrome.storage.sync.get(['isLocked'], function(result) {
-      isLocked = result.isLocked || false;
-      updateLockUI();
+
+      applyLockUI(lockState);
     });
   }
-  
-  function handleChangeKey() {
-    // prompt for current key
-    const currentKey = prompt('Enter current key:');
-    if (currentKey === null) return; 
-    if (currentKey !== CORRECT_KEY) {
-      alert('Incorrect current key!');
+
+  // ─── APPLY LOCK UI ────────────────────────────────────────
+  function applyLockUI(lockState) {
+    clearInterval(countdownInterval);
+
+    const locked = lockState.type !== 'none';
+
+    loadBlockedUrls();
+    addBtn.disabled = locked;
+
+    if (!locked) {
+      lockSection.style.display     = 'block';
+      activeLockPanel.style.display = 'none';
+      setStatus('unlocked', 'Unlocked');
       return;
     }
-    
-    // prompt for new key
-    const newKey = prompt('Enter new key:');
-    if (newKey === null) return; 
-    if (newKey.trim() === '') {
-      alert('Key cannot be empty!');
-      return;
+
+    lockSection.style.display     = 'none';
+    activeLockPanel.style.display = 'block';
+
+    if (lockState.type === 'password') {
+      passwordActivePanel.style.display = 'block';
+      timeActivePanel.style.display     = 'none';
+      setStatus('locked', 'Locked');
     }
-    
-    // update key
-    updateKey(newKey.trim());
+
+    if (lockState.type === 'time') {
+      passwordActivePanel.style.display = 'none';
+      timeActivePanel.style.display     = 'block';
+      setStatus('time-locked', 'Time Locked');
+      startCountdown(lockState.unlockAt);
+    }
   }
-  
-  function updateKey(newKey) {
-    // update var function
-    CORRECT_KEY = newKey;
-    
-    // store new key in chrome storage
-    chrome.storage.local.set({ 'extensionKey': newKey }, function() {
-      alert('Key updated successfully!');
-    });
+
+  function startCountdown(unlockAt) {
+    function tick() {
+      const remaining = Math.max(0, unlockAt - Date.now());
+      countdownDisplay.textContent = formatDuration(remaining);
+
+      if (remaining <= 0) {
+        clearInterval(countdownInterval);
+        const lockState = { type: 'none' };
+        chrome.storage.sync.set({ lockState }, function () {
+          applyLockUI(lockState);
+          notify('Time lock expired', 'success');
+        });
+      }
+    }
+
+    tick();
+    countdownInterval = setInterval(tick, 500);
   }
+
+  // ─── HELPERS ──────────────────────────────────────────────
+  function setStatus(type, label) {
+    statusPill.className   = 'status-pill ' + type;
+    statusPill.textContent = label;
+  }
+
+  function formatDuration(ms) {
+    const total = Math.ceil(ms / 1000);
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  function notify(msg, type) {
+    const notif = document.getElementById('notif');
+    notif.textContent = msg;
+    notif.className   = 'notif show' + (type ? ' ' + type : '');
+    setTimeout(() => { notif.className = 'notif'; }, 2200);
+  }
+
 });

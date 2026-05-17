@@ -2,170 +2,620 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --border: #2a2a2a;
+      --border-active: #444;
+      --text: #e8e8e8;
+      --text-muted: #666;
+      --text-dim: #999;
+      --accent-blue: #3b82f6;
+      --accent-blue-dim: #1d4ed8;
+      --accent-red: #ef4444;
+      --accent-red-dim: #b91c1c;
+      --accent-amber: #f59e0b;
+      --accent-green: #22c55e;
+      --lock-glow: rgba(59, 130, 246, 0.15);
+      --time-glow: rgba(245, 158, 11, 0.15);
+    }
+
+    * { box-sizing: border-box; }
+
     body {
-      width: 400px;
-      padding: 20px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      width: 380px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Sans', sans-serif;
       margin: 0;
+      padding: 0;
     }
-    
-    h1 {
-      font-size: 18px;
-      margin: 0;
-      color: #333;
+
+    .app {
+      padding: 16px;
     }
-    
+
+    /* HEADER */
     .header {
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
-    
-    .header-right {
+
+    .logo {
       display: flex;
-      gap: 4px;
       align-items: center;
-    }
-    
-    .header-lock-btn {
-      background: none;
-      border: none;
-      font-size: 20px;
-      cursor: pointer;
-      padding: 4px;
-      border-radius: 4px;
-      transition: background-color 0.2s;
-    }
-    
-    .header-lock-btn:hover {
-      background-color: #f0f0f0;
-    }
-    
-    .change-key-btn {
-      background-color: #8a8f93;
-      color: white;
-      border: none;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-    
-    .change-key-btn:hover {
-      background-color: #5d6165;
-    }
-    
-    .input-group {
-      display: flex;
       gap: 8px;
-      margin-bottom: 15px;
     }
-    
-    input[type="text"] {
+
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: var(--accent-blue);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .logo-text {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      color: var(--text);
+    }
+
+    .status-pill {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      padding: 3px 8px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .status-pill.unlocked {
+      background: rgba(34, 197, 94, 0.1);
+      color: var(--accent-green);
+      border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .status-pill.locked {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--accent-red);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .status-pill.time-locked {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--accent-amber);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    /* URL INPUT */
+    .section {
+      margin-bottom: 12px;
+    }
+
+    .section-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    input[type="text"], input[type="number"], input[type="password"] {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:focus {
+      border-color: var(--border-active);
+    }
+
+    input[type="text"]::placeholder, input[type="number"]::placeholder, input[type="password"]::placeholder {
+      color: var(--text-muted);
+    }
+
+    #urlInput {
       flex: 1;
-      padding: 8px 12px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px;
     }
-    
-    button {
-      padding: 8px 16px;
+
+    .btn {
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 14px;
-      transition: background-color 0.2s;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      padding: 8px 12px;
+      transition: background-color 0.15s, opacity 0.15s;
+      white-space: nowrap;
     }
-    
-    .add-btn {
-      background-color: #007bff;
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--accent-blue);
       color: white;
     }
-    
-    .add-btn:hover {
-      background-color: #0056b3;
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-blue-dim);
     }
-    
+
+    .btn-danger {
+      background: var(--accent-red);
+      color: white;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: var(--accent-red-dim);
+    }
+
+    .btn-ghost {
+      background: var(--surface);
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover:not(:disabled) {
+      border-color: var(--border-active);
+      color: var(--text);
+    }
+
+    /* URL LIST */
     .url-list {
-      max-height: 300px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      min-height: 60px;
+      max-height: 180px;
       overflow-y: auto;
-      border: 1px solid #eee;
-      border-radius: 4px;
-      padding: 10px;
     }
-    
+
+    .url-list::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .url-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .url-list::-webkit-scrollbar-thumb {
+      background: var(--border-active);
+      border-radius: 2px;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-muted);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      padding: 20px;
+    }
+
     .url-item {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 8px 0;
-      border-bottom: 1px solid #f0f0f0;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      gap: 8px;
     }
-    
+
     .url-item:last-child {
       border-bottom: none;
     }
-    
+
     .url-text {
-      flex: 1;
-      font-size: 14px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
       word-break: break-all;
-      color: #555;
+      flex: 1;
     }
-    
+
     .remove-btn {
-      background-color: #dc3545;
-      color: white;
-      padding: 4px 8px;
-      font-size: 12px;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 4px;
+      padding: 3px 7px;
+      font-size: 10px;
+      font-family: 'IBM Plex Mono', monospace;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
     }
-    
-    .remove-btn:hover {
-      background-color: #c82333;
+
+    .remove-btn:hover:not(:disabled) {
+      border-color: var(--accent-red);
+      color: var(--accent-red);
     }
-    
-    .empty-state {
-      text-align: center;
-      color: #999;
-      font-style: italic;
-      padding: 20px;
+
+    .remove-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
     }
-    
-    .help-text {
-      font-size: 12px;
-      color: #666;
-      margin-top: 15px;
+
+    /* DIVIDER */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 14px 0;
+    }
+
+    /* LOCK MODES */
+    .lock-section-title {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    .lock-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .lock-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      text-align: left;
+    }
+
+    .lock-card:hover {
+      border-color: var(--border-active);
+    }
+
+    .lock-card.selected.password-mode {
+      border-color: var(--accent-blue);
+      background: var(--lock-glow);
+    }
+
+    .lock-card.selected.time-mode {
+      border-color: var(--accent-amber);
+      background: var(--time-glow);
+    }
+
+    .lock-card-icon {
+      font-size: 18px;
+      margin-bottom: 6px;
+    }
+
+    .lock-card-title {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+
+    .lock-card-desc {
+      font-size: 10px;
+      color: var(--text-muted);
       line-height: 1.4;
     }
-    
+
+    /* LOCK CONFIG */
+    .lock-config {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .config-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .time-inputs {
+      display: flex;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .time-field {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      flex: 1;
+    }
+
+    .time-field label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .time-field input {
+      width: 100%;
+      text-align: center;
+    }
+
+    /* ACTIVE LOCK DISPLAY */
+    .active-lock-panel {
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+
+    .active-lock-panel.password-active {
+      background: var(--lock-glow);
+      border: 1px solid var(--accent-blue);
+    }
+
+    .active-lock-panel.time-active {
+      background: var(--time-glow);
+      border: 1px solid var(--accent-amber);
+    }
+
+    .lock-panel-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .lock-panel-icon {
+      font-size: 18px;
+    }
+
+    .lock-panel-info {
+      flex: 1;
+    }
+
+    .lock-panel-title {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .lock-panel-sub {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    /* COUNTDOWN */
+    .countdown-display {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--accent-amber);
+      text-align: center;
+      letter-spacing: 2px;
+      margin: 6px 0;
+    }
+
+    .countdown-label {
+      text-align: center;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    /* UNLOCK INPUT */
+    .unlock-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .unlock-row input {
+      flex: 1;
+    }
+
+    /* CHANGE KEY LINK */
+    .footer-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 4px;
+    }
+
+    .text-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+      transition: color 0.15s;
+    }
+
+    .text-btn:hover {
+      color: var(--text-dim);
+    }
+
+    /* NOTIFICATION */
+    .notif {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface);
+      border: 1px solid var(--border-active);
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      padding: 7px 14px;
+      border-radius: 20px;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .notif.show {
+      opacity: 1;
+    }
+
+    .notif.error {
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+    }
+
+    .notif.success {
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+    }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>Tab Lock</h1>
-    <div class="header-right">
-      <button id="changeKeyBtn" class="change-key-btn">Change Key</button>
-      <button id="lockBtn" class="header-lock-btn">🔓</button>
+  <div class="app">
+
+    <!-- HEADER -->
+    <div class="header">
+      <div class="logo">
+        <div class="logo-icon">🔐</div>
+        <span class="logo-text">Tab Lock</span>
+      </div>
+      <div id="statusPill" class="status-pill unlocked">Unlocked</div>
     </div>
+
+    <!-- URL SECTION -->
+    <div class="section">
+      <div class="section-label">Blocked URLs</div>
+      <div class="input-row" style="margin-bottom: 6px;">
+        <input type="text" id="urlInput" placeholder="example.com or full URL">
+        <button id="addBtn" class="btn btn-primary">Add</button>
+      </div>
+      <div id="urlList" class="url-list">
+        <div class="empty-state">No blocked URLs yet</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- LOCK SECTION (shown when unlocked) -->
+    <div id="lockSection">
+      <div class="lock-section-title">Lock Mode</div>
+      <div class="lock-cards">
+        <button class="lock-card selected password-mode" id="cardPassword">
+          <div class="lock-card-icon">🔑</div>
+          <div class="lock-card-title">Password Lock</div>
+          <div class="lock-card-desc">Unlock anytime with your key</div>
+        </button>
+        <button class="lock-card" id="cardTime">
+          <div class="lock-card-icon">⏳</div>
+          <div class="lock-card-title">Time Lock</div>
+          <div class="lock-card-desc">Locked until timer expires</div>
+        </button>
+      </div>
+
+      <!-- PASSWORD CONFIG
+      <div class="lock-config" id="passwordConfig">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-muted);">
+          Password is set in code. Engage lock to activate.
+        </div>
+      </div> -->
+
+      <!-- TIME CONFIG -->
+      <div class="lock-config" id="timeConfig" style="display:none;">
+        <div class="time-inputs">
+          <div class="time-field">
+            <label>Hours</label>
+            <input type="number" id="lockHours" min="0" max="99" value="0" placeholder="0">
+          </div>
+          <div class="time-field">
+            <label>Minutes</label>
+            <input type="number" id="lockMinutes" min="0" max="59" value="30" placeholder="30">
+          </div>
+          <div class="time-field">
+            <label>Seconds</label>
+            <input type="number" id="lockSeconds" min="0" max="59" value="0" placeholder="0">
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="engageLockBtn" style="width:100%;">Engage Lock</button>
+    </div>
+
+    <!-- ACTIVE LOCK PANEL (shown when locked) -->
+    <div id="activeLockPanel" style="display:none;">
+
+      <!-- PASSWORD ACTIVE -->
+      <div class="active-lock-panel password-active" id="passwordActivePanel" style="display:none;">
+        <div class="lock-panel-header">
+          <div class="lock-panel-icon">🔒</div>
+          <div class="lock-panel-info">
+            <div class="lock-panel-title">Password Locked</div>
+            <div class="lock-panel-sub">Enter your key to unlock</div>
+          </div>
+        </div>
+        <div class="unlock-row">
+          <input type="password" id="unlockKeyInput" placeholder="Enter unlock key">
+          <button class="btn btn-primary" id="unlockKeyBtn">Unlock</button>
+        </div>
+      </div>
+
+      <!-- TIME ACTIVE -->
+      <div class="active-lock-panel time-active" id="timeActivePanel" style="display:none;">
+        <div class="lock-panel-header">
+          <div class="lock-panel-icon">⏳</div>
+          <div class="lock-panel-info">
+            <div class="lock-panel-title">Time Locked</div>
+            <div class="lock-panel-sub">Cannot unlock until timer expires</div>
+          </div>
+        </div>
+        <div class="countdown-display" id="countdownDisplay">00:00:00</div>
+        <div class="countdown-label">Remaining</div>
+      </div>
+
+    </div>
+
   </div>
-  
-  <div class="input-group">
-    <input type="text" id="urlInput" placeholder="Enter URL to block (e.g., example.com)">
-    <button id="addBtn" class="add-btn">Add</button>
-  </div>
-  
-  <div id="urlList" class="url-list">
-    <div class="empty-state">No blocked URLs yet</div>
-  </div>
-  
-  <div class="help-text">
-    Enter URLs or domain names to block. The extension will automatically close tabs that match these URLs.
-  </div>
-  
+
+  <div id="notif" class="notif"></div>
+
   <script src="popup.js"></script>
 </body>
 </html>
