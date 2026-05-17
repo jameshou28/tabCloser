@@ -1,15 +1,17 @@
 // initialize blocklist with default empty array if not exists
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.sync.get(['blockedUrls'], (result) => {
+  chrome.storage.sync.get(['blockedUrls', 'lockState'], (result) => {
     if (!result.blockedUrls) {
       chrome.storage.sync.set({ blockedUrls: [] });
+    }
+    if (!result.lockState) {
+      chrome.storage.sync.set({ lockState: { type: 'none' } });
     }
   });
 });
 
 // check link when tab is updated
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  // Only check when the tab is completely loaded
   if (changeInfo.status === 'complete' && tab.url) {
     checkAndCloseTab(tabId, tab.url);
   }
@@ -23,22 +25,23 @@ chrome.tabs.onCreated.addListener((tab) => {
 });
 
 function checkAndCloseTab(tabId, url) {
-  chrome.storage.sync.get(['blockedUrls'], (result) => {
+  chrome.storage.sync.get(['blockedUrls', 'lockState'], (result) => {
     const blockedUrls = result.blockedUrls || [];
-    
-    // check if the current link matches any blocked url
+    const lockState   = result.lockState   || { type: 'none' };
+
+    // If time lock has expired, clear it automatically
+    if (lockState.type === 'time' && Date.now() >= lockState.unlockAt) {
+      chrome.storage.sync.set({ lockState: { type: 'none' } });
+    }
+
     const shouldBlock = blockedUrls.some(blockedUrl => {
-      // convert both URLs to lowercase for case-insensitive comparison
       const currentUrl = url.toLowerCase();
-      const blocked = blockedUrl.toLowerCase();
-      
-      // check for exact match or if the blocked link is contained in the current link
+      const blocked    = blockedUrl.toLowerCase();
       return currentUrl === blocked || currentUrl.includes(blocked);
     });
-    
+
     if (shouldBlock) {
       chrome.tabs.remove(tabId);
-      console.log(`Closed tab with URL: ${url}`);
     }
   });
 }
