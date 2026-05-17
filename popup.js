@@ -196,7 +196,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const locked = lockState.type !== 'none';
 
     loadBlockedUrls();
-    addBtn.disabled = locked;
 
     if (!locked) {
       lockSection.style.display     = 'block';
