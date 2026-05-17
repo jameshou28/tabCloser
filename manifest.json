@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Tab Lock",
-  "version": "1.1",
+  "version": "6.7",
   "description": "Automatically closes tabs that match URLs on your blocklist",
   "permissions": [
     "storage",
